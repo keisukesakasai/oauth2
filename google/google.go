@@ -244,19 +244,24 @@ type computeSource struct {
 }
 
 func (cs computeSource) Token() (*oauth2.Token, error) {
+	fmt.Println("--- oauth2 ---")
+	fmt.Println("metadata.OnGCE()", metadata.OnGCE())
 	if !metadata.OnGCE() {
 		return nil, errors.New("oauth2/google: can't get a token from the metadata service; not running on GCE")
 	}
+	fmt.Println("acct", cs.account)
 	acct := cs.account
 	if acct == "" {
 		acct = "default"
 	}
+	fmt.Println("acct", acct)
 	tokenURI := "instance/service-accounts/" + acct + "/token"
 	if len(cs.scopes) > 0 {
 		v := url.Values{}
 		v.Set("scopes", strings.Join(cs.scopes, ","))
 		tokenURI = tokenURI + "?" + v.Encode()
 	}
+	fmt.Println("tokenURI", tokenURI)
 	tokenJSON, err := metadata.Get(tokenURI)
 	if err != nil {
 		return nil, err
@@ -281,6 +286,7 @@ func (cs computeSource) Token() (*oauth2.Token, error) {
 	// NOTE(cbro): add hidden metadata about where the token is from.
 	// This is needed for detection by client libraries to know that credentials come from the metadata server.
 	// This may be removed in a future version of this library.
+	fmt.Println("--- oauth2 ---")
 	return tok.WithExtra(map[string]interface{}{
 		"oauth2.google.tokenSource":    "compute-metadata",
 		"oauth2.google.serviceAccount": acct,
